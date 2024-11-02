@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Payment Details</h2>
+
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Order Summary</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Order Total:</strong> ${{ "%.2f"|format(order.total_price) }}</p>
+            <p><strong>Status:</strong> {{ order.payment_status }}</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Select Payment Method</h4>
+        </div>
+        <div class="card-body">
+            <form id="paymentForm" method="POST">
+                <!-- Payment Method Selection -->
+                <div class="mb-4">
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="payment_method" id="creditCard" value="credit_card">
+                        <label class="form-check-label" for="creditCard">Credit Card</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="payment_method" id="debitCard" value="debit_card">
+                        <label class="form-check-label" for="debitCard">Debit Card</label>
+                    </div>
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="payment_method" id="account" value="account">
+                        <label class="form-check-label" for="account">Charge to Account</label>
+                    </div>
+                </div>
+
+                <!-- Card Payment Fields -->
+                <div id="cardFields" style="display: none;">
+                    <div class="mb-3">
+                        <label for="cardNumber" class="form-label">Card Number</label>
+                        <input type="text" class="form-control" id="cardNumber" name="card_number"
+                               placeholder="1234 5678 9012 3456" maxlength="19">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="expiryDate" class="form-label">Expiry Date</label>
+                            <input type="text" class="form-control" id="expiryDate" name="expiry_date"
+                                   placeholder="MM/YY" maxlength="5">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="cvv" class="form-label">CVV</label>
+                            <input type="text" class="form-control" id="cvv" name="cvv"
+                                   placeholder="123" maxlength="3">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Payment Fields -->
+                <div id="accountFields" style="display: none;">
+                    <div class="mb-3">
+                        <label class="form-label">Current Account Balance: ${{ "%.2f"|format(current_user.balance) }}</label>
+                    </div>
+                    <div class="mb-3">
+                        <label for="installments" class="form-label">Number of Installments</label>
+                        <select class="form-select" id="installments" name="installments">
+                            <option value="1">Single Payment</option>
+                            <option value="2">2 Installments</option>
+                            <option value="3">3 Installments</option>
+                            <option value="4">4 Installments</option>
+                        </select>
+                    </div>
+                    <div id="installmentDetails" class="mb-3" style="display: none;">
+                        <p>Each installment amount will be: $<span id="installmentAmount">0.00</span></p>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-success mt-3" id="submitPayment">
+                    Process Payment
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cardFields = document.getElementById('cardFields');
+    const accountFields = document.getElementById('accountFields');
+    const paymentMethodInputs = document.getElementsByName('payment_method');
+    const installmentsSelect = document.getElementById('installments');
+    const installmentDetails = document.getElementById('installmentDetails');
+    const installmentAmount = document.getElementById('installmentAmount');
+    const totalAmount = {{ order.total_price }};
+
+    // Handle payment method selection
+    paymentMethodInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.value === 'credit_card' || this.value === 'debit_card') {
+                cardFields.style.display = 'block';
+                accountFields.style.display = 'none';
+            } else if (this.value === 'account') {
+                cardFields.style.display = 'none';
+                accountFields.style.display = 'block';
+            }
+        });
+    });
+
+    // Handle installments change
+    installmentsSelect.addEventListener('change', function() {
+        const numberOfInstallments = parseInt(this.value);
+        if (numberOfInstallments > 1) {
+            const amount = (totalAmount / numberOfInstallments).toFixed(2);
+            installmentAmount.textContent = amount;
+            installmentDetails.style.display = 'block';
+        } else {
+            installmentDetails.style.display = 'none';
+        }
+    });
+
+    // Format card number with spaces
+    const cardNumber = document.getElementById('cardNumber');
+    cardNumber.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\s/g, '');
+        value = value.replace(/(\d{4})/g, '$1 ').trim();
+        e.target.value = value;
+    });
+
+    // Format expiry date
+    const expiryDate = document.getElementById('expiryDate');
+    expiryDate.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length >= 2) {
+            value = value.slice(0,2) + '/' + value.slice(2,4);
+        }
+        e.target.value = value;
+    });
+
+    // Validate CVV - numbers only
+    const cvv = document.getElementById('cvv');
+    cvv.addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '');
+    });
+});
+</script>
+{% endblock %}

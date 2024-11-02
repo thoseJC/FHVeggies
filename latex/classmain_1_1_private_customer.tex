@@ -1,0 +1,75 @@
+\doxysection{main.\+Private\+Customer Class Reference}
+\hypertarget{classmain_1_1_private_customer}{}\label{classmain_1_1_private_customer}\index{main.PrivateCustomer@{main.PrivateCustomer}}
+Inheritance diagram for main.\+Private\+Customer\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classmain_1_1_private_customer}
+\end{center}
+\end{figure}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classmain_1_1_private_customer_a6bf87625fd158b687215637346482a35}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, int \mbox{\hyperlink{classmain_1_1_customer_ab61eaa2ccd7df6a3e36cefa8f9fb0080}{customer\+\_\+id}}, str \mbox{\hyperlink{classmain_1_1_customer_ae16659299c58c792ce951bc8e71923b1}{name}}, str \mbox{\hyperlink{classmain_1_1_customer_a76977cd1d2c7b1dc466bcceb4688508b}{contact\+\_\+info}}, float \mbox{\hyperlink{classmain_1_1_customer_a2915a093a86016fd9edcfc68447e4bba}{balance}})
+\item 
+bool \mbox{\hyperlink{classmain_1_1_private_customer_a53da6d2f772de076cfc8912bd093c720}{can\+\_\+place\+\_\+order}} (self)
+\end{DoxyCompactItemize}
+\doxysubsection*{Public Member Functions inherited from \mbox{\hyperlink{classmain_1_1_customer}{main.\+Customer}}}
+\begin{DoxyCompactItemize}
+\item 
+str \mbox{\hyperlink{classmain_1_1_customer_a02a772fca34a7dfbe79ed00df1d48a31}{get\+\_\+full\+\_\+name}} (self)
+\item 
+bool \mbox{\hyperlink{classmain_1_1_customer_a93fe3002899233343b197e16dc796a7c}{check\+\_\+credit\+\_\+limit}} (self)
+\item 
+list \mbox{\hyperlink{classmain_1_1_customer_a41a52aaccb07038bacbfdc08537d3031}{get\+\_\+order\+\_\+history}} (self)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Additional Inherited Members}
+\doxysubsection*{Public Attributes inherited from \mbox{\hyperlink{classmain_1_1_customer}{main.\+Customer}}}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classmain_1_1_customer_ab61eaa2ccd7df6a3e36cefa8f9fb0080}{customer\+\_\+id}} = customer\+\_\+id
+\item 
+\mbox{\hyperlink{classmain_1_1_customer_ae16659299c58c792ce951bc8e71923b1}{name}} = name
+\item 
+\mbox{\hyperlink{classmain_1_1_customer_a76977cd1d2c7b1dc466bcceb4688508b}{contact\+\_\+info}} = contact\+\_\+info
+\item 
+\mbox{\hyperlink{classmain_1_1_customer_a2915a093a86016fd9edcfc68447e4bba}{balance}} = balance
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}A private customer.\end{DoxyVerb}
+ 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classmain_1_1_private_customer_a6bf87625fd158b687215637346482a35}\index{main.PrivateCustomer@{main.PrivateCustomer}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!main.PrivateCustomer@{main.PrivateCustomer}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily \label{classmain_1_1_private_customer_a6bf87625fd158b687215637346482a35} 
+main.\+Private\+Customer.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self}{, }\item[{int}]{customer\+\_\+id}{, }\item[{str}]{name}{, }\item[{str}]{contact\+\_\+info}{, }\item[{float}]{balance}{}\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}create a new private customer.
+
+:param customer_id: Customer's unique ID.
+:param name: Customer's name.
+:param contact_info: Contact info.
+:param balance: How much the customer owes.
+\end{DoxyVerb}
+ 
+
+Reimplemented from \mbox{\hyperlink{classmain_1_1_customer_aa6d6b0dca073f996c45495e4a811cda0}{main.\+Customer}}.
+
+
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classmain_1_1_private_customer_a53da6d2f772de076cfc8912bd093c720}\index{main.PrivateCustomer@{main.PrivateCustomer}!can\_place\_order@{can\_place\_order}}
+\index{can\_place\_order@{can\_place\_order}!main.PrivateCustomer@{main.PrivateCustomer}}
+\doxysubsubsection{\texorpdfstring{can\_place\_order()}{can\_place\_order()}}
+{\footnotesize\ttfamily \label{classmain_1_1_private_customer_a53da6d2f772de076cfc8912bd093c720} 
+ bool main.\+Private\+Customer.\+can\+\_\+place\+\_\+order (\begin{DoxyParamCaption}\item[{}]{self}{}\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Private customer can order only if the balance is under $100.\end{DoxyVerb}
+ 
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{main_8py}{main.\+py}}\end{DoxyCompactItemize}

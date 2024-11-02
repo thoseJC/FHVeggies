@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Dashboard - Fresh Harvest{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Welcome Section -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-3">Welcome {{ current_user.name }}!</h2>
+            <p class="text-muted">Type: {{ 'Private' if current_user.customer_type == 'private' else 'Corporate' }} Customer</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <p class="mb-2">Account Balance: <span class="text-{{ 'success' if current_user.balance >= 0 else 'danger' }}">${{ "%.2f"|format(current_user.balance) }}</span></p>
+            {% if current_user.customer_type == 'corporate' %}
+                <p>Credit Limit: ${{ "%.2f"|format(current_user.credit_limit) }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-light h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-cart-plus fs-2 text-success mb-2"></i>
+                    <h5>Shopping</h5>
+                    <a href="{{ url_for('shop.shop') }}" class="btn btn-outline-success btn-sm">Browse Products</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-box-seam fs-2 text-primary mb-2"></i>
+                    <h5>My Orders</h5>
+                    <a href="{{ url_for('shop.customer_orders') }}" class="btn btn-outline-primary btn-sm">View All Orders</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-person-circle fs-2 text-info mb-2"></i>
+                    <h5>Profile</h5>
+                    <a href="{{ url_for('shop.profile') }}" class="btn btn-outline-info btn-sm">View Profile</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-light h-100">
+                <div class="card-body text-center">
+                    <i class="bi bi-basket2 fs-2 text-warning mb-2"></i>
+                    <h5>Cart</h5>
+                    <a href="{{ url_for('shop.checkout') }}" class="btn btn-outline-warning btn-sm">View Cart</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Order Section -->
+    <div class="card mb-4 border-success">
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Current Order</h4>
+            {% if current_order %}
+                <span class="badge bg-light text-dark">Order #{{ current_order.id }}</span>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if current_order %}
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Status:</strong>
+                            <span class="badge bg-{{ 'warning' if current_order.status == 'Pending'
+                                else 'info' if current_order.status == 'Processing'
+                                else 'success' if current_order.status == 'Delivered'
+                                else 'secondary' }}">
+                                {{ current_order.status }}
+                            </span>
+                        </p>
+                        <p><strong>Order Date:</strong> {{ current_order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Total Price:</strong> <span class="text-success">${{ "%.2f"|format(current_order.total_price) }}</span></p>
+                        <p><strong>Payment Status:</strong>
+                            <span class="badge bg-{{ 'success' if current_order.payment_status == 'Paid'
+                                else 'warning' if current_order.payment_status == 'Pending'
+                                else 'info' }}">
+                                {{ current_order.payment_status }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="{{ url_for('shop.current_order') }}" class="btn btn-primary">
+                        <i class="bi bi-eye"></i> View Details
+                    </a>
+                    <form action="{{ url_for('shop.cancel_order', order_id=current_order.id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-danger" id="cancelOrderBtn">
+                            <i class="bi bi-x-circle"></i> Cancel Order
+                        </button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-cart-x fs-1 text-muted"></i>
+                    <p class="mt-3">You have no current orders.</p>
+                    <a href="{{ url_for('shop.shop') }}" class="btn btn-success">
+                        <i class="bi bi-cart-plus"></i> Start Shopping
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Previous Orders Section -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Order History</h4>
+            <a href="{{ url_for('shop.customer_orders') }}" class="btn btn-light btn-sm">View All Orders</a>
+        </div>
+        <div class="card-body">
+            {% if previous_orders %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Date</th>
+                                <th>Total Price</th>
+                                <th>Status</th>
+                                <th>Payment</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in previous_orders %}
+                                <tr>
+                                    <td>#{{ order.id }}</td>
+                                    <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>${{ "%.2f"|format(order.total_price) }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if order.status == 'Delivered'
+                                            else 'warning' if order.status == 'Pending'
+                                            else 'info' }}">
+                                            {{ order.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if order.payment_status == 'Paid'
+                                            else 'warning' if order.payment_status == 'Pending'
+                                            else 'info' }}">
+                                            {{ order.payment_status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('shop.order_details', order_id=order.id) }}" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-eye"></i> Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="bi bi-clock-history fs-1 text-muted"></i>
+                    <p class="mt-3">No order history available.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Cancel order confirmation
+    const cancelOrderBtn = document.getElementById('cancelOrderBtn');
+    if (cancelOrderBtn) {
+        cancelOrderBtn.addEventListener("click", function(event) {
+            if (!confirm("Are you sure you want to cancel this order? This action cannot be undone.")) {
+                event.preventDefault();
+            }
+        });
+    }
+
+    // Add hover effect to quick action cards
+    const actionCards = document.querySelectorAll('.card.bg-light');
+    actionCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.classList.add('shadow-sm');
+            this.style.transform = 'translateY(-5px)';
+            this.style.transition = 'all 0.3s ease';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.classList.remove('shadow-sm');
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+</script>
+{% endblock %}

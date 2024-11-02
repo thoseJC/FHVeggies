@@ -1,0 +1,40 @@
+body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        main {
+            flex: 1 0 auto;
+            padding: 2rem 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #198754 !important;
+        }
+
+        .nav-link {
+            color: #333;
+            font-weight: 500;
+            transition: color 0.2s ease-in-out;
+        }
+
+        .nav-link:hover {
+            color: #198754;
+        }
+
+        .footer {
+            background-color: #f8f9fa;
+            padding: 1.5rem 0;
+            margin-top: auto;
+        }
+
+        .navbar {
+            box-shadow: 0 2px 4px rgba(0,0,0,.08);
+        }
+
+        .active {
+            color: #198754 !important;
+        }

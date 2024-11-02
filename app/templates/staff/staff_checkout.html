@@ -1,0 +1,160 @@
+{# templates/staff/staff_checkout.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Checkout</h2>
+    
+    <div class="alert alert-info">
+        <h4 class="mb-0">
+            <i class="bi bi-person"></i>
+            Placing order for: {{ customer.name }}
+            <small class="text-muted">({{ customer.customer_type|capitalize }} Customer)</small>
+        </h4>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Order Summary -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Order Summary</h4>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cart_item in cart %}
+                                    {% if cart_item.type == 'regular' %}
+                                        {% set item = items|selectattr('id', 'equalto', cart_item.id|int)|first %}
+                                        {% if item %}
+                                            {% set item_total = item.price_per_unit * cart_item.quantity %}
+                                            <tr>
+                                                <td>{{ item.name }}</td>
+                                                <td>{{ cart_item.quantity }} {{ cart_item.unit_type }}</td>
+                                                <td>${{ "%.2f"|format(item.price_per_unit) }}</td>
+                                                <td>${{ "%.2f"|format(item_total) }}</td>
+                                            </tr>
+                                        {% endif %}
+                                    {% elif cart_item.type == 'premade_box' %}
+                                        <tr>
+                                            <td>{{ cart_item.box_size|capitalize }} Box</td>
+                                            <td>1</td>
+                                            <td>${{ "%.2f"|format(cart_item.box_price) }}</td>
+                                            <td>${{ "%.2f"|format(cart_item.box_price) }}</td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Payment Section -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Payment Details</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <!-- Order Totals -->
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Subtotal:</span>
+                                <span>${{ "%.2f"|format(subtotal) }}</span>
+                            </div>
+
+                            {% if discount > 0 %}
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>Corporate Discount (10%):</span>
+                                <span>-${{ "%.2f"|format(discount) }}</span>
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex justify-content-between">
+                                <strong>Total:</strong>
+                                <strong class="text-success">${{ "%.2f"|format(total) }}</strong>
+                            </div>
+                        </div>
+
+                        <!-- Payment Method -->
+                        <div class="mb-3">
+                            <label class="form-label">Payment Method</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method"
+                                       id="card_payment" value="credit_card" checked>
+                                <label class="form-check-label" for="card_payment">
+                                    Credit/Debit Card
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method"
+                                       id="account_payment" value="account">
+                                <label class="form-check-label" for="account_payment">
+                                    Customer Account
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Card Details (initially shown) -->
+                        <div id="card_details">
+                            <div class="mb-3">
+                                <label class="form-label">Card Number</label>
+                                <input type="text" name="card_number" class="form-control"
+                                       placeholder="1234 5678 9012 3456" pattern="\d{16}">
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-6">
+                                    <label class="form-label">Expiry Date</label>
+                                    <input type="text" name="expiry_date" class="form-control"
+                                           placeholder="MM/YY">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">CVV</label>
+                                    <input type="text" name="cvv" class="form-control"
+                                           placeholder="123" pattern="\d{3}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-lock"></i> Complete Order
+                            </button>
+                            <a href="{{ url_for('staff.staff_shop') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Shopping
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const cardDetails = document.getElementById('card_details');
+    const paymentMethodInputs = document.querySelectorAll('input[name="payment_method"]');
+
+    paymentMethodInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            cardDetails.style.display = this.value === 'credit_card' ? 'block' : 'none';
+        });
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

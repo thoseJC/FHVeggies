@@ -1,0 +1,138 @@
+{# templates/staff/staff_shop.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="alert alert-info">
+        <h4 class="mb-0">
+            <i class="bi bi-person"></i>
+            Ordering for: {{ customer.name }}
+            <small class="text-muted">({{ customer.customer_type|capitalize }} Customer)</small>
+        </h4>
+    </div>
+
+    <div class="row">
+        <!-- Items List -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Available Items</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for item in items %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ item.name }}</h5>
+                                    <p class="card-text">
+                                        ${{ "%.2f"|format(item.price_per_unit) }} per {{ item.unit_type }}
+                                    </p>
+                                    <form action="{{ url_for('staff.staff_add_to_cart') }}" method="POST">
+                                        <input type="hidden" name="item_id" value="{{ item.id }}">
+                                        <input type="hidden" name="unit_type" value="{{ item.unit_type }}">
+                                        <div class="input-group">
+                                            <input type="number" name="quantity" class="form-control" value="1" min="1">
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="bi bi-cart-plus"></i> Add
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">Cart Summary</h4>
+                </div>
+                <div class="card-body">
+                    {% if session.staff_cart %}
+                        {% set subtotal = 0 %}
+                        {% for cart_item in session.staff_cart %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                {% if cart_item.type == 'regular' %}
+                                    {% set item = items|selectattr('id', 'equalto', cart_item.id|int)|first %}
+                                    {% if item %}
+                                        {% set item_total = item.price_per_unit * cart_item.quantity %}
+                                        {% set subtotal = subtotal + item_total %}
+                                        <div>
+                                            <span>{{ item.name }}</span>
+                                            <small class="text-muted d-block">
+                                                Qty: {{ cart_item.quantity }} {{ cart_item.unit_type }}
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <span>${{ "%.2f"|format(item_total) }}</span>
+                                            <a href="{{ url_for('staff.staff_remove_from_cart', cart_item_id=cart_item.cart_item_id) }}"
+                                               class="btn btn-sm btn-outline-danger ms-2">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                {% elif cart_item.type == 'premade_box' %}
+                                    <div>
+                                        <span>{{ cart_item.box_size|capitalize }} Box</span>
+                                        <small class="text-muted d-block">Custom Box</small>
+                                    </div>
+                                    <div>
+                                        {% set box_total = cart_item.get('box_price', 0) %}
+                                        {% set subtotal = subtotal + box_total %}
+                                        <span>${{ "%.2f"|format(box_total) }}</span>
+                                        <a href="{{ url_for('staff.staff_remove_from_cart', cart_item_id=cart_item.cart_item_id) }}"
+                                           class="btn btn-sm btn-outline-danger ms-2">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <strong>Subtotal:</strong>
+                            <span>${{ "%.2f"|format(subtotal) }}</span>
+                        </div>
+
+                        {% if customer.customer_type == 'corporate' %}
+                        {% set discount = subtotal * 0.1 %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <strong>Corporate Discount (10%):</strong>
+                            <span>-${{ "%.2f"|format(discount) }}</span>
+                        </div>
+                        {% else %}
+                        {% set discount = 0 %}
+                        {% endif %}
+
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total:</strong>
+                            <span class="text-success fw-bold">
+                                ${{ "%.2f"|format(subtotal - discount) }}
+                            </span>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('staff.staff_checkout') }}" class="btn btn-success">
+                                <i class="bi bi-cart-check"></i> Proceed to Checkout
+                            </a>
+                            <a href="{{ url_for('staff.staff_dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Dashboard
+                            </a>
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted mb-0">Cart is empty</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

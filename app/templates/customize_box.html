@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4">Customize Your Premade Box</h2>
+
+    <!-- Box Size Selection -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Step 1: Select Box Size</h4>
+        </div>
+        <div class="card-body">
+            <div class="row justify-content-center">
+                <div class="col-md-4">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="boxSize" id="small" value="small">
+                        <label class="form-check-label" for="small">
+                            <strong>Small Box</strong>
+                            <br>4 items + $1 box fee
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="boxSize" id="medium" value="medium">
+                        <label class="form-check-label" for="medium">
+                            <strong>Medium Box</strong>
+                            <br>8 items + $2 box fee
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="boxSize" id="large" value="large">
+                        <label class="form-check-label" for="large">
+                            <strong>Large Box</strong>
+                            <br>16 items + $3 box fee
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Item Selection -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Step 2: Select Items</h4>
+            <small class="text-white">Select items up to your box's limit</small>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info" id="selectionInfo" style="display: none;">
+                Please select <span id="remainingItems">0</span> more items for your box
+            </div>
+
+            <div class="row">
+                {% for item in available_items %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <img src="{{ url_for('static', filename=item.image_path) }}"
+                             class="card-img-top"
+                             alt="{{ item.name }}"
+                             style="height: 200px; object-fit: cover;"
+                             onerror="this.src='{{ url_for('static', filename='images/default-image.jpg') }}'">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ item.name }}</h5>
+                            <p class="card-text">
+                                ${{ "%.2f"|format(item.price_per_unit) }} per {{ item.unit_type }}
+                            </p>
+                            <div class="form-group">
+                                <label for="item_{{ item.id }}">Quantity:</label>
+                                <select class="form-select item-quantity"
+                                        id="item_{{ item.id }}"
+                                        data-item-id="{{ item.id }}"
+                                        data-price="{{ item.price_per_unit }}"
+                                        data-name="{{ item.name }}"
+                                        data-unit-type="{{ item.unit_type }}"
+                                        disabled>
+                                    <option value="0">0</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h4 class="mb-0">Order Summary</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Selected Items:</h5>
+                    <ul id="selectedItemsList" class="list-unstyled">
+                        <!-- Selected items will be listed here -->
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <p>Items Selected: <span id="totalItems">0</span>/<span id="maxItems">0</span></p>
+                    <p>Box Fee: $<span id="boxFee">0.00</span></p>
+                    <p>Items Subtotal: $<span id="itemsSubtotal">0.00</span></p>
+                    <h4>Total Price: $<span id="totalPrice">0.00</span></h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Form -->
+    <form id="customBoxForm" action="{{ url_for('shop.add_to_cart') }}" method="POST">
+        <input type="hidden" name="item_type" value="premade_box">
+        <input type="hidden" name="id" value="{{ box_id }}">
+        <input type="hidden" name="box_size" id="selectedBoxSize">
+        <input type="hidden" name="selected_items" id="selectedItemsJson">
+        <input type="hidden" name="total_price" id="finalPrice">
+
+        <div class="text-center mb-5">
+            <button type="submit" class="btn btn-success btn-lg" id="submitButton" disabled>
+                Add Box to Cart
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+const boxSizes = {
+    'small': { maxItems: 4, fee: 1 },
+    'medium': { maxItems: 8, fee: 2 },
+    'large': { maxItems: 16, fee: 3 }
+};
+
+let selectedSize = null;
+let selectedItems = {};
+let totalItems = 0;
+
+// Handle box size selection
+document.querySelectorAll('input[name="boxSize"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        selectedSize = this.value;
+        const config = boxSizes[selectedSize];
+
+        // Update UI elements
+        document.getElementById('maxItems').textContent = config.maxItems;
+        document.getElementById('boxFee').textContent = config.fee.toFixed(2);
+        document.getElementById('selectionInfo').style.display = 'block';
+        updateRemainingItems();
+
+        // Enable quantity selectors
+        document.querySelectorAll('.item-quantity').forEach(select => {
+            select.disabled = false;
+            // Reset and populate options based on max items
+            select.innerHTML = Array.from({length: config.maxItems + 1}, (_, i) =>
+                `<option value="${i}">${i}</option>`
+            ).join('');
+        });
+
+        // Reset selections
+        selectedItems = {};
+        totalItems = 0;
+        updateSummary();
+    });
+});
+
+// Handle quantity changes
+document.querySelectorAll('.item-quantity').forEach(select => {
+    select.addEventListener('change', function() {
+        if (!selectedSize) return;
+
+        const itemId = this.dataset.itemId;
+        const quantity = parseInt(this.value);
+        const price = parseFloat(this.dataset.price);
+        const name = this.dataset.name;
+        const unitType = this.dataset.unitType;
+
+        const config = boxSizes[selectedSize];
+        const otherItems = Object.entries(selectedItems)
+            .filter(([id, _]) => id !== itemId)
+            .reduce((sum, [_, item]) => sum + item.quantity, 0);
+
+        if (otherItems + quantity <= config.maxItems) {
+            if (quantity > 0) {
+                selectedItems[itemId] = {
+                    id: itemId,
+                    quantity: quantity,
+                    price: price,
+                    name: name,
+                    unit_type: unitType
+                };
+            } else {
+                delete selectedItems[itemId];
+            }
+            updateSummary();
+            updateRemainingItems();
+        } else {
+            alert(`Cannot exceed ${config.maxItems} items for ${selectedSize} box`);
+            this.value = '0';
+        }
+    });
+});
+
+function updateRemainingItems() {
+    const config = boxSizes[selectedSize];
+    const remaining = config.maxItems - totalItems;
+    document.getElementById('remainingItems').textContent = remaining;
+}
+
+function updateSummary() {
+    if (!selectedSize) return;
+
+    const config = boxSizes[selectedSize];
+    totalItems = Object.values(selectedItems)
+        .reduce((sum, item) => sum + item.quantity, 0);
+
+    const itemsSubtotal = Object.values(selectedItems)
+        .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    const total = itemsSubtotal + config.fee;
+
+    // Update summary display
+    document.getElementById('totalItems').textContent = totalItems;
+    document.getElementById('itemsSubtotal').textContent = itemsSubtotal.toFixed(2);
+    document.getElementById('totalPrice').textContent = total.toFixed(2);
+
+    // Update selected items list
+    const listHTML = Object.values(selectedItems)
+        .map(item => `<li>${item.quantity}x ${item.name} (${item.unit_type})</li>`)
+        .join('');
+    document.getElementById('selectedItemsList').innerHTML = listHTML;
+
+    // Update form values
+    document.getElementById('selectedBoxSize').value = selectedSize;
+    document.getElementById('selectedItemsJson').value = JSON.stringify(selectedItems);
+    document.getElementById('finalPrice').value = total.toFixed(2);
+
+    // Enable/disable submit button
+    document.getElementById('submitButton').disabled = totalItems !== config.maxItems;
+}
+
+// Initialize the form with disabled submit button
+document.getElementById('submitButton').disabled = true;
+</script>
+
+{% endblock %}

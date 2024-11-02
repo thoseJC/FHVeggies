@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Customer List</h1>
+    {% if customers %}
+        <ul>
+            {% for customer in customers %}
+            <li>{{ customer.name }} - {{ customer.contact_info }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-center">No customers found.</p>
+    {% endif %}
+</div>
+{% endblock %}

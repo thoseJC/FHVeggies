@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Current Orders</h1>
+    {% if current_orders %}
+        {% for order in current_orders %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>Order ID: {{ order.id }}</h5>
+                <p>Status: {{ order.status }}</p>
+                <p>Customer: {{ order.customer.name }}</p>
+                <p>Total Price: ${{ "%.2f"|format(order.total_price) }}</p>
+                <form method="POST" action="{{ url_for('staff.update_order_status', order_id=order.id) }}">
+                    <select name="status" class="form-control mb-2">
+                        <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Completed" {% if order.status == 'Completed' %}selected{% endif %}>Completed</option>
+                        <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                        <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary">Update Status</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center">No current orders found.</p>
+    {% endif %}
+</div>
+{% endblock %}

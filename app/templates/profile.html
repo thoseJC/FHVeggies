@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+    <h2>My Profile</h2>
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">{{ customer.name }}</h5>
+            <p class="card-text">
+                <strong>Username:</strong> {{ customer.username }}<br>
+                <strong>Contact Info:</strong> {{ customer.contact_info or 'Not provided' }}<br>
+                <strong>Customer Type:</strong> {{ customer_type }}<br>
+                <strong>Account Balance:</strong> ${{ "%.2f"|format(customer.balance) }}<br>
+                {% if customer_type == "Corporate Customer" %}
+                <strong>Credit Limit:</strong> ${{ "%.2f"|format(customer.credit_limit) }}
+                {% endif %}
+            </p>
+            <a href="{{ url_for('shop.customer_orders') }}" class="btn btn-primary">View My Orders</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

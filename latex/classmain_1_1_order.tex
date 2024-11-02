@@ -1,0 +1,91 @@
+\doxysection{main.\+Order Class Reference}
+\hypertarget{classmain_1_1_order}{}\label{classmain_1_1_order}\index{main.Order@{main.Order}}
+\doxysubsubsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classmain_1_1_order_a491ae95ac82c15fe273fd5d15c58bf69}{\+\_\+\+\_\+init\+\_\+\+\_\+}} (self, int \mbox{\hyperlink{classmain_1_1_order_a200056e3b94d3b61dd04de71aeb7cb62}{order\+\_\+id}}, \mbox{\hyperlink{classmain_1_1_customer}{Customer}} \mbox{\hyperlink{classmain_1_1_order_a4b87dcecdcb5fb9a9908cbafd5741cc8}{customer}}, list \mbox{\hyperlink{classmain_1_1_order_a68df203a7d8f2743d22155a427dfbc9a}{items}}, bool \mbox{\hyperlink{classmain_1_1_order_adb0f43084d303116b29d1d2096880751}{delivery}})
+\item 
+float \mbox{\hyperlink{classmain_1_1_order_ad050654e9d94981eb0ce50a848707499}{calculate\+\_\+total}} (self)
+\item 
+bool \mbox{\hyperlink{classmain_1_1_order_a779b854d92dcca2d141666208ef7bdf4}{process\+\_\+payment}} (self, str payment\+\_\+method)
+\end{DoxyCompactItemize}
+\doxysubsubsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{classmain_1_1_order_a200056e3b94d3b61dd04de71aeb7cb62}{order\+\_\+id}} = order\+\_\+id
+\item 
+\mbox{\hyperlink{classmain_1_1_order_a4b87dcecdcb5fb9a9908cbafd5741cc8}{customer}} = customer
+\item 
+\mbox{\hyperlink{classmain_1_1_order_a68df203a7d8f2743d22155a427dfbc9a}{items}} = items
+\item 
+\mbox{\hyperlink{classmain_1_1_order_adb0f43084d303116b29d1d2096880751}{delivery}} = delivery
+\end{DoxyCompactItemize}
+
+
+\doxysubsection{Detailed Description}
+\begin{DoxyVerb}Order that made by a customer.\end{DoxyVerb}
+ 
+
+\doxysubsection{Constructor \& Destructor Documentation}
+\Hypertarget{classmain_1_1_order_a491ae95ac82c15fe273fd5d15c58bf69}\index{main.Order@{main.Order}!\_\_init\_\_@{\_\_init\_\_}}
+\index{\_\_init\_\_@{\_\_init\_\_}!main.Order@{main.Order}}
+\doxysubsubsection{\texorpdfstring{\_\_init\_\_()}{\_\_init\_\_()}}
+{\footnotesize\ttfamily \label{classmain_1_1_order_a491ae95ac82c15fe273fd5d15c58bf69} 
+main.\+Order.\+\_\+\+\_\+init\+\_\+\+\_\+ (\begin{DoxyParamCaption}\item[{}]{self}{, }\item[{int}]{order\+\_\+id}{, }\item[{\mbox{\hyperlink{classmain_1_1_customer}{Customer}}}]{customer}{, }\item[{list}]{items}{, }\item[{bool}]{delivery}{}\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}Create a new order.
+
+:param order_id: Unique order ID.
+:param customer: The customer who placed the order.
+:param items: List of items in the order.
+:param delivery: Whether delivery is required.
+\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Function Documentation}
+\Hypertarget{classmain_1_1_order_ad050654e9d94981eb0ce50a848707499}\index{main.Order@{main.Order}!calculate\_total@{calculate\_total}}
+\index{calculate\_total@{calculate\_total}!main.Order@{main.Order}}
+\doxysubsubsection{\texorpdfstring{calculate\_total()}{calculate\_total()}}
+{\footnotesize\ttfamily \label{classmain_1_1_order_ad050654e9d94981eb0ce50a848707499} 
+ float main.\+Order.\+calculate\+\_\+total (\begin{DoxyParamCaption}\item[{}]{self}{}\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}calculate the total cost of the order.\end{DoxyVerb}
+ \Hypertarget{classmain_1_1_order_a779b854d92dcca2d141666208ef7bdf4}\index{main.Order@{main.Order}!process\_payment@{process\_payment}}
+\index{process\_payment@{process\_payment}!main.Order@{main.Order}}
+\doxysubsubsection{\texorpdfstring{process\_payment()}{process\_payment()}}
+{\footnotesize\ttfamily \label{classmain_1_1_order_a779b854d92dcca2d141666208ef7bdf4} 
+ bool main.\+Order.\+process\+\_\+payment (\begin{DoxyParamCaption}\item[{}]{self}{, }\item[{str}]{payment\+\_\+method}{}\end{DoxyParamCaption})}
+
+\begin{DoxyVerb}process the payment for the order.\end{DoxyVerb}
+ 
+
+\doxysubsection{Member Data Documentation}
+\Hypertarget{classmain_1_1_order_a4b87dcecdcb5fb9a9908cbafd5741cc8}\index{main.Order@{main.Order}!customer@{customer}}
+\index{customer@{customer}!main.Order@{main.Order}}
+\doxysubsubsection{\texorpdfstring{customer}{customer}}
+{\footnotesize\ttfamily \label{classmain_1_1_order_a4b87dcecdcb5fb9a9908cbafd5741cc8} 
+main.\+Order.\+customer = customer}
+
+\Hypertarget{classmain_1_1_order_adb0f43084d303116b29d1d2096880751}\index{main.Order@{main.Order}!delivery@{delivery}}
+\index{delivery@{delivery}!main.Order@{main.Order}}
+\doxysubsubsection{\texorpdfstring{delivery}{delivery}}
+{\footnotesize\ttfamily \label{classmain_1_1_order_adb0f43084d303116b29d1d2096880751} 
+main.\+Order.\+delivery = delivery}
+
+\Hypertarget{classmain_1_1_order_a68df203a7d8f2743d22155a427dfbc9a}\index{main.Order@{main.Order}!items@{items}}
+\index{items@{items}!main.Order@{main.Order}}
+\doxysubsubsection{\texorpdfstring{items}{items}}
+{\footnotesize\ttfamily \label{classmain_1_1_order_a68df203a7d8f2743d22155a427dfbc9a} 
+main.\+Order.\+items = items}
+
+\Hypertarget{classmain_1_1_order_a200056e3b94d3b61dd04de71aeb7cb62}\index{main.Order@{main.Order}!order\_id@{order\_id}}
+\index{order\_id@{order\_id}!main.Order@{main.Order}}
+\doxysubsubsection{\texorpdfstring{order\_id}{order\_id}}
+{\footnotesize\ttfamily \label{classmain_1_1_order_a200056e3b94d3b61dd04de71aeb7cb62} 
+main.\+Order.\+order\+\_\+id = order\+\_\+id}
+
+
+
+The documentation for this class was generated from the following file\+:\begin{DoxyCompactItemize}
+\item 
+\mbox{\hyperlink{main_8py}{main.\+py}}\end{DoxyCompactItemize}

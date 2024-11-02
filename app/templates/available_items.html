@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Available Vegetables and Premade Boxes</h1>
+    <h4>Vegetables</h4>
+    <ul>
+        {% for item in items %}
+        <li>{{ item.name }} - ${{ "%.2f"|format(item.price_per_unit) }} per {{ item.unit_type }}</li>
+        {% endfor %}
+    </ul>
+    <h4>Premade Boxes</h4>
+    <ul>
+        {% for box in premade_boxes %}
+        <li>{{ box.size }} Box - Base Price: ${{ "%.2f"|format(box.base_price) }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

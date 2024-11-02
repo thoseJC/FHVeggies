@@ -1,0 +1,30 @@
+{# templates/staff/place_customer_order.html #}
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Place Order for Customer</h2>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Select Customer
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                <div class="mb-3">
+                    <label for="customer_id" class="form-label">Customer</label>
+                    <select name="customer_id" id="customer_id" class="form-select" required>
+                        <option value="">Select a customer...</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.id }}">
+                            {{ customer.name }} ({{ customer.customer_type }}) - {{ customer.contact_info }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Continue to Shop</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

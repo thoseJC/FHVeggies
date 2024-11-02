@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1 class="text-center">Previous Orders</h1>
+    {% if previous_orders %}
+        {% for order in previous_orders %}
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5>Order ID: {{ order.id }}</h5>
+                <p>Status: {{ order.status }}</p>
+                <p>Customer: {{ order.customer.name }}</p>
+                <p>Total Price: ${{ "%.2f"|format(order.total_price) }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="text-center">No previous orders found.</p>
+    {% endif %}
+</div>
+{% endblock %}
