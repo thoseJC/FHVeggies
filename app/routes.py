@@ -554,6 +554,7 @@ def make_payment(order_id):
     return render_template(
         'make_payment.html',
         order=order,
+        amount=order.total_price,
         payment_successful=False
     )
 
