@@ -340,6 +340,9 @@ def checkout():
         # Calculate discount
         discount = subtotal * 0.1 if isinstance(current_user, CorporateCustomer) else 0
 
+        print("Session order_details:", session.get('order_details'))
+        print("Cart contents:", session.get('cart'))
+
         return render_template(
             'checkout.html',
             cart=cart,
@@ -385,13 +388,26 @@ def place_order():
             flash('Unable to determine the distance for the provided address. Please check your address.', 'danger')
             return redirect(url_for('shop.checkout'))
 
-    subtotal = float(request.form.get('subtotal') or session.get('order_details', {}).get('subtotal', 0))
-    discount = float(request.form.get('discount') or session.get('order_details', {}).get('discount', 0))
-    delivery_fee = 10 if delivery_option == 'delivery' else 0
+    # Recalculate total from cart items
+    calculated_subtotal = 0
+    for cart_item in cart:
+        if cart_item.get('type') == 'regular':
+            item = Item.query.get(cart_item.get('id'))
+            if item:
+                quantity = cart_item.get('quantity', 1)
+                calculated_subtotal += item.price_per_unit * quantity
+        elif cart_item.get('type') == 'premade_box':
+            box = PreMadeBox.query.get(cart_item.get('id'))
+            if box:
+                quantity = cart_item.get('quantity', 1)
+                calculated_subtotal += box.calculate_price() * quantity
 
-    # Include custom box fee if applicable
+    # Use calculated values instead of form/session values
+    subtotal = calculated_subtotal
+    discount = float(request.form.get('discount', 0))
+    delivery_fee = 10 if delivery_option == 'delivery' else 0
     box_fee = session.get('custom_box_details', {}).get('box_fee', 0)
-    total = subtotal + delivery_fee + box_fee
+    total = subtotal - discount + delivery_fee + box_fee
 
     order = Order(
         customer_id=current_user.id,
@@ -410,7 +426,11 @@ def place_order():
         for item_id, quantity in custom_box_details['selected_items'].items():
             item = Item.query.get(item_id)
             if item:
-                order_line = OrderLine(item_id=item.id, quantity=quantity, total_price=item.price_per_unit * quantity)
+                # Create OrderLine without total_price parameter
+                order_line = OrderLine(
+                    item_id=item.id,
+                    quantity=quantity
+                )
                 order.items.append(order_line)
 
     for cart_item in cart:
@@ -420,21 +440,38 @@ def place_order():
             box = PreMadeBox.query.get(item_id)
             if box:
                 for box_item in box.items:
-                    order_line = OrderLine(item_id=box_item.item_id, quantity=box_item.quantity * quantity, total_price=box_item.total_price)
+                    # Create OrderLine without total_price parameter
+                    order_line = OrderLine(
+                        item_id=box_item.item_id,
+                        quantity=box_item.quantity * quantity
+                    )
                     order.items.append(order_line)
         else:
             item = Item.query.get(item_id)
             if item:
-                order_line = OrderLine(item_id=item.id, quantity=quantity)
+                # Create OrderLine without total_price parameter
+                order_line = OrderLine(
+                    item_id=item.id,
+                    quantity=quantity
+                )
                 order.items.append(order_line)
 
     try:
         db.session.add(order)
         db.session.commit()
+
+        # Store the correct total in session before clearing cart
+        session['order_details'] = {
+            'subtotal': subtotal,
+            'discount': discount,
+            'delivery_fee': delivery_fee,
+            'total': total
+        }
+
         session.pop('cart', None)  # Clear cart after successful order placement
 
         flash('Order placed successfully! Please proceed to payment.', 'success')
-        return redirect(url_for('shop.make_payment', order_id=order.id, total_price=order.total_price))
+        return redirect(url_for('shop.make_payment', order_id=order.id))
 
     except Exception as e:
         db.session.rollback()
@@ -446,7 +483,28 @@ def place_order():
 @login_required
 def store_order_details():
     data = request.get_json()
-    session['order_details'] = data
+    print("Received order details:", data)  # Debug print
+
+    # Verify the calculations
+    cart = session.get('cart', [])
+    calculated_total = 0
+    for item in cart:
+        if item.get('type') == 'regular':
+            db_item = Item.query.get(item['id'])
+            if db_item:
+                calculated_total += db_item.price_per_unit * item['quantity']
+
+    print("Calculated total from cart:", calculated_total)  # Debug print
+
+    # Only store if the totals match
+    if abs(calculated_total - float(data.get('total', 0))) < 0.01:
+        session['order_details'] = data
+    else:
+        # Use calculated values instead
+        data['subtotal'] = calculated_total
+        data['total'] = calculated_total
+        session['order_details'] = data
+
     return jsonify({'success': True})
 
 
@@ -554,7 +612,6 @@ def make_payment(order_id):
     return render_template(
         'make_payment.html',
         order=order,
-        amount=order.total_price,
         payment_successful=False
     )
 

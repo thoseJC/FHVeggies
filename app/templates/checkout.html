@@ -74,10 +74,15 @@
             </div>
 
             <div class="mt-4">
-                <p><strong>Subtotal(GST incl):</strong> ${{ "%.2f"|format(subtotal) }}</p>
-                <p><strong>Discount:</strong> ${{ "%.2f"|format(discount) }}</p>
+                <p><strong id="subtotalText">Subtotal(GST incl): ${{ "%.2f"|format(subtotal) }}</strong></p>
+                <p><strong id="discountText">Discount: ${{ "%.2f"|format(discount) }}</strong></p>
                 <p><strong id="deliveryFee">Delivery Fee: $0.00</strong></p>
-                <p><strong id="total">Total: ${{ "%.2f"|format(total) }}</strong></p>
+                <p><strong id="totalText">Total: ${{ "%.2f"|format(total) }}</strong></p>
+
+                <!-- Hidden input fields to store values -->
+                <input type="hidden" id="subtotalValue" value="{{ subtotal }}">
+                <input type="hidden" id="discountValue" value="{{ discount }}">
+                <input type="hidden" id="totalValue" value="{{ total }}">
             </div>
         </div>
     </div>
@@ -89,6 +94,11 @@
         </div>
         <div class="card-body">
             <form id="checkoutForm" action="{{ url_for('shop.place_order') }}" method="POST">
+                <!-- Hidden fields for order details -->
+                <input type="hidden" name="subtotal" id="submitSubtotal" value="{{ subtotal }}">
+                <input type="hidden" name="discount" id="submitDiscount" value="{{ discount }}">
+                <input type="hidden" name="total" id="submitTotal" value="{{ total }}">
+
                 <!-- Delivery Option -->
                 <h5>Delivery Option</h5>
                 <div class="form-check">
@@ -129,37 +139,71 @@
         const deliveryOption = document.getElementById('deliveryOption');
         const pickupOption = document.querySelector('input[name="delivery_option"][value="pickup"]');
         const addressFields = document.getElementById('addressFields');
-        let subtotal = parseFloat("{{ subtotal }}");
-        let deliveryFee = 0; // Default delivery fee
+        const checkoutForm = document.getElementById('checkoutForm');
 
-        // Show address fields and update fee when "Delivery" is selected
-        deliveryOption.addEventListener('change', function () {
-            if (deliveryOption.checked) {
-                addressFields.style.display = 'block';
-                deliveryFee = 10; // Set delivery fee to $10
-            } else {
-                deliveryFee = 0; // Reset delivery fee when not selected
-            }
-            updateTotal();
-        });
+        // Get initial values from hidden fields
+        let subtotal = parseFloat(document.getElementById('subtotalValue').value);
+        let discount = parseFloat(document.getElementById('discountValue').value);
+        let deliveryFee = 0;
 
-        // Hide address fields and reset fee when "Pickup" is selected
-        pickupOption.addEventListener('change', function () {
-            if (pickupOption.checked) {
-                addressFields.style.display = 'none';
-                deliveryFee = 0; // Reset delivery fee for pickup
-            }
-            updateTotal();
-        });
-
-        // Update the total amount displayed on the page
         function updateTotal() {
-            const total = subtotal + deliveryFee;
+            const newTotal = subtotal - discount + deliveryFee;
+
+            // Update display texts
             document.getElementById('deliveryFee').textContent = `Delivery Fee: $${deliveryFee.toFixed(2)}`;
-            document.getElementById('total').textContent = `Total: $${total.toFixed(2)}`;
+            document.getElementById('totalText').textContent = `Total: $${newTotal.toFixed(2)}`;
+
+            // Update hidden form fields
+            document.getElementById('submitSubtotal').value = subtotal.toFixed(2);
+            document.getElementById('submitDiscount').value = discount.toFixed(2);
+            document.getElementById('submitTotal').value = newTotal.toFixed(2);
+
+            // Store order details in session
+            fetch("{{ url_for('shop.store_order_details') }}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    subtotal: subtotal,
+                    discount: discount,
+                    delivery_fee: deliveryFee,
+                    total: newTotal
+                })
+            }).then(response => response.json())
+              .then(data => console.log('Order details stored:', data))
+              .catch(error => console.error('Error storing order details:', error));
         }
 
-        // Initialize the total when the page loads
+        // Handle delivery option changes
+        deliveryOption.addEventListener('change', function() {
+            if (this.checked) {
+                addressFields.style.display = 'block';
+                deliveryFee = 10;
+            }
+            updateTotal();
+        });
+
+        pickupOption.addEventListener('change', function() {
+            if (this.checked) {
+                addressFields.style.display = 'none';
+                deliveryFee = 0;
+            }
+            updateTotal();
+        });
+
+        // Handle form submission
+        checkoutForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Final update of values before submission
+            updateTotal();
+
+            // Submit the form
+            this.submit();
+        });
+
+        // Initialize totals
         updateTotal();
     });
 </script>

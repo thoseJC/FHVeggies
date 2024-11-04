@@ -8,7 +8,7 @@
             <h4 class="mb-0">Order Summary</h4>
         </div>
         <div class="card-body">
-            <p><strong>Order Total:</strong> ${{ "%.2f"|format(amount) }}</p>
+            <p><strong>Order Total:</strong> ${{ "%.2f"|format(order.total_price) }}</p>
             <p><strong>Status:</strong> {{ order.payment_status }}</p>
         </div>
     </div>
