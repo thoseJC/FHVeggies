@@ -467,11 +467,11 @@ def store_order_details():
     return jsonify({'success': True})
 
 
-# New Payment Route
 @shop_bp.route('/make_payment/<int:order_id>', methods=['GET', 'POST'])
 @login_required
 def make_payment(order_id):
-    order = Order.query.get_or_404(order_id)
+    # Load order with customer relationship
+    order = Order.query.options(db.joinedload(Order.customer)).get_or_404(order_id)
 
     if not order:
         flash('Order not found.', 'error')
@@ -503,7 +503,7 @@ def make_payment(order_id):
 
                 # Create single card payment
                 payment = Payment(
-                    order_id=order.id,
+                    order=order,
                     payment_method=payment_method,
                     amount=order.total_price,
                     status='pending'
@@ -523,17 +523,17 @@ def make_payment(order_id):
 
                 # Validate against customer limits
                 if isinstance(current_user, PrivateCustomer):
-                    if (current_user.balance + amount_per_installment) > 100:
+                    if (current_user.balance - amount_per_installment) < -100:
                         flash('This payment would exceed your account limit.', 'danger')
                         return redirect(url_for('shop.make_payment', order_id=order.id))
                 elif isinstance(current_user, CorporateCustomer):
-                    if (current_user.balance + amount_per_installment) > current_user.credit_limit:
+                    if (current_user.balance - amount_per_installment) < -current_user.credit_limit:
                         flash('This payment would exceed your credit limit.', 'danger')
                         return redirect(url_for('shop.make_payment', order_id=order.id))
 
                 # Create first installment payment
                 payment = Payment(
-                    order_id=order.id,
+                    order=order,
                     payment_method='account',
                     amount=amount_per_installment,
                     installment_number=1,
@@ -542,7 +542,7 @@ def make_payment(order_id):
 
                 if payment.process_payment():
                     db.session.add(payment)
-                    current_user.balance += amount_per_installment
+                    current_user.balance -= amount_per_installment  # Subtract payment from balance
 
                     if installments == 1:
                         order.payment_status = 'Paid'
@@ -556,7 +556,7 @@ def make_payment(order_id):
                         }
 
                     db.session.commit()
-                    flash(f'First installment processed successfully!', 'success')
+                    flash(f'Payment processed successfully!', 'success')
                     return redirect(url_for('shop.customer_orders'))
 
             else:
@@ -574,6 +574,7 @@ def make_payment(order_id):
         amount=order.total_price,
         payment_successful=False
     )
+
 
 @shop_bp.route('/customer_orders', methods=['GET'])
 @login_required

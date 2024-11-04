@@ -336,13 +336,20 @@ class Payment(db.Model):
     transaction_id = db.Column(db.String(100))
     status = db.Column(db.String(20), default='pending')  # pending, completed, failed
 
-    # Relationships
+    # Define the relationship with Order
     order = db.relationship('Order', backref=db.backref('payments', lazy=True))
 
-    # In the Payment class
     def process_payment(self):
         """Process payment based on payment method."""
         try:
+            # Ensure order is loaded
+            if not self.order:
+                raise ValueError("Order not found")
+
+            # Ensure customer is loaded
+            if not self.order.customer:
+                raise ValueError("Customer not found")
+
             if self.payment_method in ['credit_card', 'debit_card']:
                 # Simulate card payment processing
                 self.transaction_id = f"TR-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}"
@@ -355,7 +362,7 @@ class Payment(db.Model):
                     if (customer.balance - self.amount) < -100:
                         raise ValueError("Payment would exceed private customer limit")
                 elif isinstance(customer, CorporateCustomer):
-                    if customer.balance > customer.credit_limit:
+                    if (customer.balance - self.amount) < -customer.credit_limit:
                         raise ValueError("Payment would exceed credit limit")
 
                 self.status = 'completed'
@@ -367,11 +374,6 @@ class Payment(db.Model):
             self.status = 'failed'
             db.session.rollback()
             raise e
-
-    # In the PrivateCustomer class
-    def can_place_order(self, order_amount):
-        """Checks if private customer can place an order based on current balance."""
-        return (self.balance - order_amount) >= -100.0  # Changed to check minimum balance
 
     def get_payment_details(self):
         """Returns a dictionary of payment details."""
