@@ -339,6 +339,7 @@ class Payment(db.Model):
     # Relationships
     order = db.relationship('Order', backref=db.backref('payments', lazy=True))
 
+    # In the Payment class
     def process_payment(self):
         """Process payment based on payment method."""
         try:
@@ -350,7 +351,8 @@ class Payment(db.Model):
             elif self.payment_method == 'account':
                 customer = self.order.customer
                 if isinstance(customer, PrivateCustomer):
-                    if (customer.balance + self.amount) > 100:
+                    # Check if payment would make balance go below -$100
+                    if (customer.balance - self.amount) < -100:
                         raise ValueError("Payment would exceed private customer limit")
                 elif isinstance(customer, CorporateCustomer):
                     if customer.balance > customer.credit_limit:
@@ -365,6 +367,11 @@ class Payment(db.Model):
             self.status = 'failed'
             db.session.rollback()
             raise e
+
+    # In the PrivateCustomer class
+    def can_place_order(self, order_amount):
+        """Checks if private customer can place an order based on current balance."""
+        return (self.balance - order_amount) >= -100.0  # Changed to check minimum balance
 
     def get_payment_details(self):
         """Returns a dictionary of payment details."""
