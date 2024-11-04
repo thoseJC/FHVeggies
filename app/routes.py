@@ -67,10 +67,11 @@ def customer_dashboard():
         flash("Unauthorized access!")
         return redirect(url_for('auth.login'))
 
-    # Get current order (pending payment)
+    # Get current order (both payment and status pending)
     current_order = Order.query.filter_by(
         customer_id=current_user.id,
-        payment_status='Pending'
+        payment_status='Pending',
+        status='Pending'  # Add this condition
     ).order_by(Order.created_at.desc()).first()
 
     # Get order history (excluding current pending order)
@@ -78,14 +79,13 @@ def customer_dashboard():
         customer_id=current_user.id
     ).filter(
         Order.payment_status != 'Pending'
-    ).order_by(Order.created_at.desc()).limit(5).all()  # Limiting to last 5 orders
+    ).order_by(Order.created_at.desc()).limit(5).all()
 
     return render_template(
         'customer_dashboard.html',
         current_order=current_order,
         previous_orders=previous_orders
     )
-
 
 @shop_bp.route('/', methods=['GET', 'POST'])
 def shop():
@@ -242,7 +242,6 @@ def remove_from_cart(cart_item_id):
     return redirect(url_for('shop.checkout'))
 
 
-# View Current Order Details Route
 @shop_bp.route('/current_order')
 @login_required
 def current_order():
@@ -250,6 +249,29 @@ def current_order():
     if not order:
         flash("No current order found.", "info")
         return redirect(url_for('shop.shop'))
+
+    # Calculate total price based on order lines
+    subtotal = sum(line.calculate_price() for line in order.items)
+    if isinstance(current_user, CorporateCustomer):
+        discount = subtotal * 0.1
+    else:
+        discount = 0
+
+    delivery_fee = 10.0 if order.delivery else 0
+    total_price = subtotal - discount + delivery_fee
+
+    # Update order with calculated values
+    order.subtotal = subtotal
+    order.discount = discount
+    order.delivery_fee = delivery_fee
+    order.total_price = total_price
+
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error updating order totals: {str(e)}", "error")
+
     return render_template('current_order.html', order=order)
 
 
@@ -372,75 +394,70 @@ def place_order():
     postal_code = request.form.get('postal_code') if delivery_option == 'delivery' else None
     delivery_address = f"{street_address}, {city}, {postal_code}" if street_address and city and postal_code else None
 
-    # Calculate delivery distance if delivery option is selected
-    if delivery_option == 'delivery':
-        origin_lat, origin_lon = -43.6409, 172.4691  # Coordinates of Lincoln University
-        dest_lat, dest_lon = get_coordinates(delivery_address)
-        if dest_lat and dest_lon:
-            distance = haversine(origin_lat, origin_lon, dest_lat, dest_lon)
-            if distance > 20:
-                flash('Delivery is only available within a 20 km radius.', 'danger')
-                return redirect(url_for('shop.checkout'))
-        else:
-            flash('Unable to determine the distance for the provided address. Please check your address.', 'danger')
-            return redirect(url_for('shop.checkout'))
-
-    subtotal = float(request.form.get('subtotal') or session.get('order_details', {}).get('subtotal', 0))
-    discount = float(request.form.get('discount') or session.get('order_details', {}).get('discount', 0))
+    # Calculate delivery fee
     delivery_fee = 10 if delivery_option == 'delivery' else 0
 
-    # Include custom box fee if applicable
-    box_fee = session.get('custom_box_details', {}).get('box_fee', 0)
-    total = subtotal + delivery_fee + box_fee
-
-    order = Order(
-        customer_id=current_user.id,
-        subtotal=subtotal,
-        discount=discount,
-        delivery_fee=delivery_fee,
-        total_price=total,
-        delivery=True if delivery_option == 'delivery' else False,
-        delivery_address=delivery_address,
-        payment_status='Pending'
-    )
-
-    # Add items to order (including customized boxes)
-    if 'custom_box_details' in session:
-        custom_box_details = session.pop('custom_box_details')
-        for item_id, quantity in custom_box_details['selected_items'].items():
-            item = Item.query.get(item_id)
-            if item:
-                order_line = OrderLine(item_id=item.id, quantity=quantity, total_price=item.price_per_unit * quantity)
-                order.items.append(order_line)
-
-    for cart_item in cart:
-        item_id = cart_item.get('id')
-        quantity = cart_item.get('quantity', 1)
-        if cart_item.get('type') == 'premade_box':
-            box = PreMadeBox.query.get(item_id)
-            if box:
-                for box_item in box.items:
-                    order_line = OrderLine(item_id=box_item.item_id, quantity=box_item.quantity * quantity, total_price=box_item.total_price)
-                    order.items.append(order_line)
-        else:
-            item = Item.query.get(item_id)
-            if item:
-                order_line = OrderLine(item_id=item.id, quantity=quantity)
-                order.items.append(order_line)
-
     try:
+        subtotal = 0
+        order = Order(
+            customer_id=current_user.id,
+            delivery=delivery_option == 'delivery',
+            delivery_address=delivery_address,
+            payment_status='Pending',
+            status='Pending'
+        )
+
+        # Add items and calculate totals
+        for cart_item in cart:
+            item_id = cart_item.get('id')
+            quantity = cart_item.get('quantity', 1)
+
+            if cart_item.get('type') == 'premade_box':
+                box = PreMadeBox.query.get(item_id)
+                if box:
+                    box_total = box.calculate_price() * quantity
+                    subtotal += box_total
+                    for box_item in box.items:
+                        line_total = box_item.item.price_per_unit * box_item.quantity * quantity
+                        order_line = OrderLine(
+                            item_id=box_item.item_id,
+                            quantity=box_item.quantity * quantity,
+                            total_price=line_total
+                        )
+                        order.items.append(order_line)
+            else:
+                item = Item.query.get(item_id)
+                if item:
+                    line_total = item.price_per_unit * quantity
+                    subtotal += line_total
+                    order_line = OrderLine(
+                        item_id=item.id,
+                        quantity=quantity,
+                        total_price=line_total
+                    )
+                    order.items.append(order_line)
+
+        # Calculate final totals
+        discount = subtotal * 0.1 if isinstance(current_user, CorporateCustomer) else 0
+        total_price = subtotal - discount + delivery_fee
+
+        # Update order with calculated values
+        order.subtotal = subtotal
+        order.discount = discount
+        order.delivery_fee = delivery_fee
+        order.total_price = total_price
+
         db.session.add(order)
         db.session.commit()
-        session.pop('cart', None)  # Clear cart after successful order placement
+        session.pop('cart', None)
 
         flash('Order placed successfully! Please proceed to payment.', 'success')
-        return redirect(url_for('shop.make_payment', order_id=order.id, total_price=order.total_price))
+        return redirect(url_for('shop.make_payment', order_id=order.id, total_price=total_price))
 
     except Exception as e:
         db.session.rollback()
         flash(f'Error saving order: {str(e)}', 'error')
         return redirect(url_for('shop.checkout'))
-
 
 @shop_bp.route('/store_order_details', methods=['POST'])
 @login_required
