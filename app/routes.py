@@ -340,9 +340,6 @@ def checkout():
         # Calculate discount
         discount = subtotal * 0.1 if isinstance(current_user, CorporateCustomer) else 0
 
-        print("Session order_details:", session.get('order_details'))
-        print("Cart contents:", session.get('cart'))
-
         return render_template(
             'checkout.html',
             cart=cart,
@@ -388,26 +385,13 @@ def place_order():
             flash('Unable to determine the distance for the provided address. Please check your address.', 'danger')
             return redirect(url_for('shop.checkout'))
 
-    # Recalculate total from cart items
-    calculated_subtotal = 0
-    for cart_item in cart:
-        if cart_item.get('type') == 'regular':
-            item = Item.query.get(cart_item.get('id'))
-            if item:
-                quantity = cart_item.get('quantity', 1)
-                calculated_subtotal += item.price_per_unit * quantity
-        elif cart_item.get('type') == 'premade_box':
-            box = PreMadeBox.query.get(cart_item.get('id'))
-            if box:
-                quantity = cart_item.get('quantity', 1)
-                calculated_subtotal += box.calculate_price() * quantity
-
-    # Use calculated values instead of form/session values
-    subtotal = calculated_subtotal
-    discount = float(request.form.get('discount', 0))
+    subtotal = float(request.form.get('subtotal') or session.get('order_details', {}).get('subtotal', 0))
+    discount = float(request.form.get('discount') or session.get('order_details', {}).get('discount', 0))
     delivery_fee = 10 if delivery_option == 'delivery' else 0
+
+    # Include custom box fee if applicable
     box_fee = session.get('custom_box_details', {}).get('box_fee', 0)
-    total = subtotal - discount + delivery_fee + box_fee
+    total = subtotal + delivery_fee + box_fee
 
     order = Order(
         customer_id=current_user.id,
@@ -426,11 +410,7 @@ def place_order():
         for item_id, quantity in custom_box_details['selected_items'].items():
             item = Item.query.get(item_id)
             if item:
-                # Create OrderLine without total_price parameter
-                order_line = OrderLine(
-                    item_id=item.id,
-                    quantity=quantity
-                )
+                order_line = OrderLine(item_id=item.id, quantity=quantity, total_price=item.price_per_unit * quantity)
                 order.items.append(order_line)
 
     for cart_item in cart:
@@ -440,38 +420,21 @@ def place_order():
             box = PreMadeBox.query.get(item_id)
             if box:
                 for box_item in box.items:
-                    # Create OrderLine without total_price parameter
-                    order_line = OrderLine(
-                        item_id=box_item.item_id,
-                        quantity=box_item.quantity * quantity
-                    )
+                    order_line = OrderLine(item_id=box_item.item_id, quantity=box_item.quantity * quantity, total_price=box_item.total_price)
                     order.items.append(order_line)
         else:
             item = Item.query.get(item_id)
             if item:
-                # Create OrderLine without total_price parameter
-                order_line = OrderLine(
-                    item_id=item.id,
-                    quantity=quantity
-                )
+                order_line = OrderLine(item_id=item.id, quantity=quantity)
                 order.items.append(order_line)
 
     try:
         db.session.add(order)
         db.session.commit()
-
-        # Store the correct total in session before clearing cart
-        session['order_details'] = {
-            'subtotal': subtotal,
-            'discount': discount,
-            'delivery_fee': delivery_fee,
-            'total': total
-        }
-
         session.pop('cart', None)  # Clear cart after successful order placement
 
         flash('Order placed successfully! Please proceed to payment.', 'success')
-        return redirect(url_for('shop.make_payment', order_id=order.id))
+        return redirect(url_for('shop.make_payment', order_id=order.id, total_price=order.total_price))
 
     except Exception as e:
         db.session.rollback()
@@ -483,28 +446,7 @@ def place_order():
 @login_required
 def store_order_details():
     data = request.get_json()
-    print("Received order details:", data)  # Debug print
-
-    # Verify the calculations
-    cart = session.get('cart', [])
-    calculated_total = 0
-    for item in cart:
-        if item.get('type') == 'regular':
-            db_item = Item.query.get(item['id'])
-            if db_item:
-                calculated_total += db_item.price_per_unit * item['quantity']
-
-    print("Calculated total from cart:", calculated_total)  # Debug print
-
-    # Only store if the totals match
-    if abs(calculated_total - float(data.get('total', 0))) < 0.01:
-        session['order_details'] = data
-    else:
-        # Use calculated values instead
-        data['subtotal'] = calculated_total
-        data['total'] = calculated_total
-        session['order_details'] = data
-
+    session['order_details'] = data
     return jsonify({'success': True})
 
 
@@ -612,6 +554,7 @@ def make_payment(order_id):
     return render_template(
         'make_payment.html',
         order=order,
+        amount=order.total_price,
         payment_successful=False
     )
 
@@ -846,11 +789,19 @@ def staff_shop():
     items = Item.query.filter_by(available=True).all()
     premade_boxes = PreMadeBox.query.all()
 
+    # Get cart and totals from session
+    cart = session.get('staff_cart', [])
+    subtotal = session.get('staff_cart_subtotal', 0)
+    total = session.get('staff_cart_total', 0)
+
     return render_template(
         'staff/staff_shop.html',
         customer=selected_customer,
         items=items,
-        premade_boxes=premade_boxes
+        premade_boxes=premade_boxes,
+        cart=cart,
+        subtotal=subtotal,
+        total=total
     )
 
 
@@ -877,11 +828,16 @@ def staff_add_to_cart():
             'type': 'regular',
             'quantity': quantity,
             'unit_type': unit_type,
-            'price_per_unit': item.price_per_unit  # Store the price
+            'price_per_unit': item.price_per_unit
         }
 
         cart.append(cart_item)
         session['staff_cart'] = cart
+
+        # Calculate and store the updated totals in session
+        subtotal = calculate_cart_total(cart)
+        session['staff_cart_subtotal'] = subtotal
+        session['staff_cart_total'] = subtotal  # Add discount calculation if needed
 
         flash(f'Added {quantity} {unit_type} of {item.name} to cart.', 'success')
 
@@ -959,37 +915,37 @@ def staff_checkout():
     if request.method == 'POST':
         payment_method = request.form.get('payment_method')
 
-        # Create order
         order = Order(
             customer_id=customer.id,
             subtotal=subtotal,
             discount=discount,
             total_price=total,
             payment_status='Pending',
-            status='Processing'  # Set initial status
+            status='Processing'
         )
 
-        # Add order items
         for cart_item in cart:
             if cart_item['type'] == 'regular':
                 item = Item.query.get(cart_item['id'])
                 if item:
+                    line_total = item.price_per_unit * cart_item['quantity']  # Calculate line total
                     order_line = OrderLine(
                         item_id=item.id,
-                        quantity=cart_item['quantity']
+                        quantity=cart_item['quantity'],
+                        total_price=line_total  # Add the total_price
                     )
                     order.items.append(order_line)
             elif cart_item['type'] == 'premade_box':
-                # Handle premade box items
                 box = PreMadeBox.query.get(cart_item['id'])
                 if box:
                     for box_item in box.items:
+                        line_total = box_item.item.price_per_unit * box_item.quantity * cart_item.get('quantity', 1)
                         order_line = OrderLine(
                             item_id=box_item.item_id,
-                            quantity=box_item.quantity * cart_item.get('quantity', 1)
+                            quantity=box_item.quantity * cart_item.get('quantity', 1),
+                            total_price=line_total  # Add the total_price
                         )
                         order.items.append(order_line)
-
         try:
             db.session.add(order)
             db.session.commit()
