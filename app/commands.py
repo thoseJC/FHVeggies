@@ -32,7 +32,6 @@ def create_staff_user(username, password, name):
 @with_appcontext
 def create_test_users():
     """Create test users for development."""
-
     # Create a test customer
     customer = Customer(
         username='test_customer',
@@ -61,6 +60,29 @@ def create_test_users():
         db.session.rollback()
         click.echo(f'Error creating test users: {str(e)}')
 
+
+@click.command('create-corporate-customer')
+@with_appcontext
+def create_corporate_customer():
+    """Create a test corporate customer."""
+    # Create a test corporate customer
+    corporate_customer = Customer(
+        username='corp_customer',
+        name='Corporate Customer',
+        contact_info='corp@example.com',
+        customer_type='corporate',
+        credit_limit=1000.0  # Set credit limit to $1000
+    )
+    corporate_customer.set_password('corp123')
+
+    try:
+        db.session.add(corporate_customer)
+        db.session.commit()
+        click.echo('Corporate customer created successfully!')
+        click.echo('Corporate Customer login: corp_customer / corp123')
+    except Exception as e:
+        db.session.rollback()
+        click.echo(f'Error creating corporate customer: {str(e)}')
 
 
 @click.command("seed-items")
