@@ -822,22 +822,25 @@ def staff_add_to_cart():
         # Get the item from database
         item = Item.query.get_or_404(item_id)
 
+        # Calculate item total
+        item_total = item.price_per_unit * quantity
+
         cart_item = {
             'cart_item_id': str(uuid.uuid4()),
             'id': item_id,
             'type': 'regular',
             'quantity': quantity,
             'unit_type': unit_type,
-            'price_per_unit': item.price_per_unit
+            'price_per_unit': item.price_per_unit,
+            'total': item_total
         }
 
         cart.append(cart_item)
-        session['staff_cart'] = cart
 
-        # Calculate and store the updated totals in session
-        subtotal = calculate_cart_total(cart)
-        session['staff_cart_subtotal'] = subtotal
-        session['staff_cart_total'] = subtotal  # Add discount calculation if needed
+        # Calculate and store cart totals
+        cart_subtotal = sum(item.get('total', 0) for item in cart)
+        session['staff_cart'] = cart
+        session['staff_cart_subtotal'] = cart_subtotal
 
         flash(f'Added {quantity} {unit_type} of {item.name} to cart.', 'success')
 

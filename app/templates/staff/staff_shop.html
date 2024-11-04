@@ -55,37 +55,18 @@
                 </div>
                 <div class="card-body">
                     {% if session.staff_cart %}
-                        {% set subtotal = 0 %}
                         {% for cart_item in session.staff_cart %}
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                {% if cart_item.type == 'regular' %}
-                                    {% set item = items|selectattr('id', 'equalto', cart_item.id|int)|first %}
-                                    {% if item %}
-                                        {% set item_total = item.price_per_unit * cart_item.quantity %}
-                                        {% set subtotal = subtotal + item_total %}
-                                        <div>
-                                            <span>{{ item.name }}</span>
-                                            <small class="text-muted d-block">
-                                                Qty: {{ cart_item.quantity }} {{ cart_item.unit_type }}
-                                            </small>
-                                        </div>
-                                        <div>
-                                            <span>${{ "%.2f"|format(item_total) }}</span>
-                                            <a href="{{ url_for('staff.staff_remove_from_cart', cart_item_id=cart_item.cart_item_id) }}"
-                                               class="btn btn-sm btn-outline-danger ms-2">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
-                                        </div>
-                                    {% endif %}
-                                {% elif cart_item.type == 'premade_box' %}
+                                {% set item = items|selectattr('id', 'equalto', cart_item.id|int)|first %}
+                                {% if item %}
                                     <div>
-                                        <span>{{ cart_item.box_size|capitalize }} Box</span>
-                                        <small class="text-muted d-block">Custom Box</small>
+                                        {{ item.name }}
+                                        <small class="text-muted d-block">
+                                            Qty: {{ cart_item.quantity }} {{ cart_item.unit_type }}
+                                        </small>
                                     </div>
                                     <div>
-                                        {% set box_total = cart_item.get('box_price', 0) %}
-                                        {% set subtotal = subtotal + box_total %}
-                                        <span>${{ "%.2f"|format(box_total) }}</span>
+                                        <span>${{ "%.2f"|format(cart_item.total) }}</span>
                                         <a href="{{ url_for('staff.staff_remove_from_cart', cart_item_id=cart_item.cart_item_id) }}"
                                            class="btn btn-sm btn-outline-danger ms-2">
                                             <i class="bi bi-trash"></i>
@@ -97,26 +78,24 @@
 
                         <hr>
 
-                        <div class="d-flex justify-content-between mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
                             <strong>Subtotal:</strong>
-                            <span>${{ "%.2f"|format(subtotal) }}</span>
+                            <strong>${{ "%.2f"|format(session.staff_cart_subtotal) }}</strong>
                         </div>
 
                         {% if customer.customer_type == 'corporate' %}
-                        {% set discount = subtotal * 0.1 %}
-                        <div class="d-flex justify-content-between mb-2">
-                            <strong>Corporate Discount (10%):</strong>
-                            <span>-${{ "%.2f"|format(discount) }}</span>
-                        </div>
+                            {% set discount = session.staff_cart_subtotal * 0.1 %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong>Corporate Discount (10%):</strong>
+                                <strong>-${{ "%.2f"|format(discount) }}</strong>
+                            </div>
                         {% else %}
-                        {% set discount = 0 %}
+                            {% set discount = 0 %}
                         {% endif %}
 
-                        <div class="d-flex justify-content-between mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
                             <strong>Total:</strong>
-                            <span class="text-success fw-bold">
-                                ${{ "%.2f"|format(subtotal - discount) }}
-                            </span>
+                            <strong class="text-success">${{ "%.2f"|format(session.staff_cart_subtotal - discount) }}</strong>
                         </div>
 
                         <div class="d-grid gap-2">
