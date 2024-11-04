@@ -1,6 +1,6 @@
 from flask import Flask
 from config_settings import Config
-from .commands import seed_items
+from .commands import seed_items, update_total_price
 from .context_processors import init_cart_context
 from .extensions import db, migrate, login_manager
 from .commands import create_test_users, seed_items, create_staff_user
@@ -34,6 +34,7 @@ def create_app():
     app.cli.add_command(create_test_users)
     app.cli.add_command(seed_items)
     app.cli.add_command(seed_premade_boxes)
+    app.cli.add_command(update_total_price)
 
     # Register blueprints
     from .routes import auth_bp, shop_bp, staff_bp
@@ -42,8 +43,6 @@ def create_app():
     app.register_blueprint(staff_bp, url_prefix='/staff')
 
     # Import commands and register them
-    app.cli.add_command(create_test_users)
-    app.cli.add_command(seed_items)
     app.cli.add_command(create_staff_user)
 
     init_cart_context(app)

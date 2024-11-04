@@ -2,7 +2,7 @@
 import click
 from flask.cli import with_appcontext
 from .extensions import db
-from .models import Customer, Staff
+from .models import Customer, Staff, OrderLine
 from flask import current_app, Flask
 from .models import Item
 
@@ -108,3 +108,14 @@ def seed_premade_boxes():
     except Exception as e:
         db.session.rollback()
         click.echo(f"Error seeding premade box: {str(e)}")
+
+
+@click.command('update-total-price')
+@with_appcontext
+def update_total_price():
+    """Update total_price for all existing order lines."""
+    order_lines = OrderLine.query.all()
+    for line in order_lines:
+        line.update_total_price()
+    db.session.commit()
+    click.echo("Total price updated for all existing order lines.")

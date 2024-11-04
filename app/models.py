@@ -307,6 +307,7 @@ class OrderLine(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('orders.id'))
     item_id = db.Column(db.Integer, db.ForeignKey('items.id'))
     quantity = db.Column(db.Integer, nullable=False)
+    total_price = db.Column(db.Float, nullable=False)
 
     # Relationships
     order = db.relationship('Order', back_populates='items')
@@ -315,6 +316,10 @@ class OrderLine(db.Model):
     def calculate_price(self):
         """Calculates the total price for this line item."""
         return self.item.price_per_unit * self.quantity
+
+    def set_total_price(self):
+        """Sets the total_price attribute with the calculated value."""
+        self.total_price = self.calculate_price()
 
 
 class Payment(db.Model):
