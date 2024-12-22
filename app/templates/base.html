@@ -25,12 +25,12 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'auth.home' %}active{% endif %}"
-                           href="{{ url_for('auth.home') }}">
-                            <i class="fas fa-home me-1"></i> Home
-                        </a>
-                    </li>
+<li class="nav-item">
+    <a class="nav-link {% if request.endpoint == 'shop.shop' %}active{% endif %}"
+       href="{{ url_for('shop.shop') }}">
+        <i class="fas fa-home me-1"></i> Home
+    </a>
+</li>
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link {% if request.endpoint == 'auth.customer_dashboard' %}active{% endif %}"

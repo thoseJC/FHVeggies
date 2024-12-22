@@ -23,3 +23,4 @@ wheel~=0.41.2
 pytest~=8.3.3
 setuptools~=68.2.0
 PyMySQL~=1.1.1
+cryptography

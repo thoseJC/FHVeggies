@@ -51,10 +51,12 @@
                             <p class="card-text">
                                 Price: ${{ "%.2f"|format(item.price_per_unit) }} per {{ item.unit_type }}
                             </p>
-                            <button onclick="openOrderModal('{{ item.id }}', '{{ item.name }}', '{{ item.unit_type }}', {{ item.price_per_unit }})"
+                                <button
+                                    onclick="handleAddToCart('{{ item.id }}', '{{ item.name }}', '{{ item.unit_type }}', {{ item.price_per_unit }})"
                                     class="btn btn-success w-100">
-                                Add to Cart
-                            </button>
+                                    Add to Cart
+                                </button>
+
                         {% endif %}
                     </div>
                 </div>
@@ -102,6 +104,17 @@
 </div>
 
 <script>
+
+function handleAddToCart(itemId, itemName, unitType, pricePerUnit) {
+    const isAuthenticated = "{{ current_user.is_authenticated }}";
+
+    if (isAuthenticated === "False") {
+        alert("Please log in to add items to your cart.");
+        window.location.href = "{{ url_for('auth.login') }}";
+    } else {
+        openOrderModal(itemId, itemName, unitType, pricePerUnit);
+    }
+}
 function filterItems(category) {
     document.querySelectorAll('.product-card').forEach(card => {
         if (category === 'all' || card.dataset.category === category) {

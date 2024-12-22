@@ -20,56 +20,44 @@
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {% for item in cart %}
-                            <tr>
-                                <td>
-                                    {% if item['type'] == 'premade_box' %}
-                                        {% set box = premade_boxes.get(item['id']|string) %}
-                                        {% if box %}
-                                            {{ box.size|capitalize }} Premade Box
-                                        {% else %}
-                                            Box Not Found
-                                        {% endif %}
-                                    {% else %}
-                                        {% set regular_item = items.get(item['id']|string) %}
-                                        {% if regular_item %}
-                                            {{ regular_item.name }}
-                                        {% else %}
-                                            Item Not Found
-                                        {% endif %}
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if item['type'] == 'premade_box' %}
-                                        -
-                                    {% else %}
-                                        {% set regular_item = items.get(item['id']|string) %}
-                                        {{ regular_item.unit_type if regular_item else '-' }}
-                                    {% endif %}
-                                </td>
-                                <td>{{ item['quantity'] }}</td>
-                                <td>
-                                    {% if item['type'] == 'premade_box' %}
-                                        {% set box = premade_boxes.get(item['id']|string) %}
-                                        ${{ "%.2f"|format(box.calculate_price() * item['quantity'] if box else 0.00) }}
-                                    {% else %}
-                                        {% set regular_item = items.get(item['id']|string) %}
-                                        ${{ "%.2f"|format(regular_item.price_per_unit * item['quantity'] if regular_item else 0.00) }}
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if item.get('cart_item_id') %}
-                                        <form action="{{ url_for('shop.remove_from_cart', cart_item_id=item['cart_item_id']) }}" method="GET" style="display: inline;">
-                                            <button type="submit" class="btn btn-danger btn-sm">Remove</button>
-                                        </form>
-                                    {% else %}
-                                        <span class="text-danger">Cannot remove this item</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
+                   <tbody>
+    {% for item in cart %}
+    <tr>
+        <td>
+            {% if item['type'] == 'premade_box' %}
+                Premade Box
+            {% else %}
+                {% set regular_item = items.get(item['id']|string) %}
+                {{ regular_item.name if regular_item else 'Item Not Found' }}
+            {% endif %}
+        </td>
+        <td>
+            {% if item['type'] == 'premade_box' %}
+                -
+            {% else %}
+                {% set regular_item = items.get(item['id']|string) %}
+                {{ regular_item.unit_type if regular_item else '-' }}
+            {% endif %}
+        </td>
+        <td>
+            {% if item['type'] == 'premade_box' %}
+                1
+            {% else %}
+                {{ item['quantity'] }}
+            {% endif %}
+        </td>
+        <td>
+            ${{ "%.2f"|format(item['total_price'] if item['type'] == 'premade_box' else regular_item.price_per_unit * item['quantity']) }}
+        </td>
+        <td>
+            <form action="{{ url_for('shop.remove_from_cart', cart_item_id=item['cart_item_id']) }}" method="GET" style="display: inline;">
+                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
+
                 </table>
             </div>
 

@@ -6,7 +6,7 @@ class Config:
 
     # SQLAlchemy database configuration for MySQL
     DB_USERNAME = os.environ.get('DB_USERNAME') or 'root'
-    DB_PASSWORD = os.environ.get('DB_PASSWORD') or ''  # Replace with your actual MySQL password
+    DB_PASSWORD = os.environ.get('DB_PASSWORD') or ''
     DB_HOST = os.environ.get('DB_HOST') or 'localhost'
     DB_PORT = os.environ.get('DB_PORT') or '3306'
     DB_NAME = os.environ.get('DB_NAME') or 'fhv'

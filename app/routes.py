@@ -117,55 +117,54 @@ def shop():
     )
 
 
-@shop_bp.route('/customize_box/<int:box_id>', methods=['GET'])
-@login_required
-def customize_box(box_id):
+@shop_bp.route('/customize_box', methods=['GET'])
+def customize_box():
     # Get all available items for selection
     available_items = Item.query.filter_by(available=True).all()
 
     return render_template(
         'customize_box.html',
         available_items=available_items,
-        box_id=box_id
     )
 
 
 @shop_bp.route('/add_to_cart', methods=['POST'])
-@login_required
 def add_to_cart():
+    if not current_user.is_authenticated:
+        flash("Please log in to add items to your cart.", "danger")
+        return redirect(url_for('auth.login'))
+
     try:
         cart = session.get('cart', [])
-        cart_item = None
 
-        if request.form.get('item_type') == 'premade_box':
+        item_type = request.form.get('item_type')
+        if item_type == 'premade_box':
+
             cart_item = {
                 'cart_item_id': str(uuid.uuid4()),
                 'type': 'premade_box',
-                'id': request.form.get('box_id'),
                 'box_size': request.form.get('box_size'),
-                'selected_items': request.form.get('selected_items'),
-                'total_price': float(request.form.get('total_price', 0))
+                'selected_items': json.loads(request.form.get('selected_items')),
+                'total_price': float(request.form.get('total_price'))
             }
         else:
-            item_id = request.form.get('item_id')
-            quantity = int(request.form.get('quantity', 1))
+            # Handle regular items
             cart_item = {
                 'cart_item_id': str(uuid.uuid4()),
-                'id': item_id,
                 'type': 'regular',
-                'quantity': quantity,
+                'id': request.form.get('item_id'),
+                'quantity': int(request.form.get('quantity')),
                 'unit_type': request.form.get('unit_type')
             }
 
-        if cart_item:
-            cart.append(cart_item)
-            session['cart'] = cart
-            flash('Item added to cart successfully!', 'success')
-
+        cart.append(cart_item)
+        session['cart'] = cart
+        flash('Item added to cart successfully!', 'success')
         return redirect(url_for('shop.shop'))
 
     except Exception as e:
-        flash(f'Error adding item to cart: {str(e)}', 'danger')
+        print(f"Error in add_to_cart: {str(e)}")
+        flash('An error occurred while adding the item to your cart.', 'danger')
         return redirect(url_for('shop.shop'))
 
 
@@ -313,60 +312,37 @@ def checkout():
     try:
         subtotal = 0
 
-        # Get all item IDs from the cart (both regular items and premade box items)
-        item_ids = []
-        for cart_item in cart:
-            if cart_item.get('type') != 'premade_box':
-                item_ids.append(cart_item.get('id'))
+        # Get all item IDs from the cart (for regular items only)
+        item_ids = [item.get('id') for item in cart if item.get('type') != 'premade_box' and item.get('id')]
 
         # Fetch all regular items at once and create a dictionary
         items = {}
         if item_ids:
             db_items = Item.query.filter(Item.id.in_(item_ids)).all()
-            items = {str(item.id): item for item in db_items}  # Convert ID to string for comparison
-
-        # Fetch all premade boxes at once if needed
-        box_ids = [item.get('id') for item in cart if item.get('type') == 'premade_box']
-        premade_boxes = {}
-        if box_ids:
-            db_boxes = PreMadeBox.query.filter(PreMadeBox.id.in_(box_ids)).all()
-            premade_boxes = {str(box.id): box for box in db_boxes}  # Convert ID to string for comparison
+            items = {str(item.id): item for item in db_items}
 
         # Calculate subtotal
         for cart_item in cart:
-            if isinstance(cart_item, dict):
-                if cart_item.get('type') == 'premade_box':
-                    box_size = cart_item.get('box_size')
-                    box_fees = {'small': 1, 'medium': 2, 'large': 3}
-                    box_fee = box_fees.get(box_size, 0)
+            if cart_item.get('type') == 'premade_box':
+                # Use the total price directly from the cart
+                subtotal += float(cart_item.get('total_price', 0))
+            else:
+                item_id = str(cart_item.get('id'))
+                quantity = int(cart_item.get('quantity', 0))
 
-                    # Calculate items total
-                    selected_items = cart_item.get('selected_items', {})
-                    if isinstance(selected_items, str):
-                        selected_items = json.loads(selected_items)
-
-                    items_total = sum(
-                        float(item.get('price', 0)) * int(item.get('quantity', 0))
-                        for item in selected_items.values()
-                    )
-
-                    subtotal += items_total + box_fee
-                else:
-                    item_id = str(cart_item.get('id'))  # Convert to string for dictionary lookup
-                    quantity = int(cart_item.get('quantity', 0))
-
-                    if item_id in items:
-                        item = items[item_id]
-                        subtotal += item.price_per_unit * quantity
+                if item_id in items:
+                    item = items[item_id]
+                    subtotal += item.price_per_unit * quantity
 
         # Calculate discount
         discount = subtotal * 0.1 if isinstance(current_user, CorporateCustomer) else 0
+
+        print(f"Cart Items: {cart}")
 
         return render_template(
             'checkout.html',
             cart=cart,
             items=items,
-            premade_boxes=premade_boxes,
             subtotal=subtotal,
             discount=discount,
             delivery_fee=0,
@@ -374,9 +350,10 @@ def checkout():
         )
 
     except Exception as e:
-        print(f"Error in checkout: {str(e)}")  # For debugging
+        print(f"Error in checkout: {str(e)}")
         flash('An error occurred during checkout. Please try again.', 'danger')
         return redirect(url_for('shop.shop'))
+
 
 
 @shop_bp.route('/place_order', methods=['POST'])
