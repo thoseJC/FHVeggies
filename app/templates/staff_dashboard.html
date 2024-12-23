@@ -1,129 +1,170 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
-    <h1 class="text-center mb-4">Staff Dashboard</h1>
+<style>
+    body {
+        background-image: url('{{ url_for('static', filename='images/bgPic-login.jpg') }}');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: #333;
+    }
 
-    <!-- Quick Actions Section -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card shadow-sm border-success">
-                <div class="card-header bg-success text-white">
-                    <h4>Quick Actions</h4>
-                </div>
-                <div class="card-body text-center">
-                    <a href="{{ url_for('staff.place_customer_order') }}" class="btn btn-lg btn-success me-3">
-                        <i class="bi bi-cart-plus"></i> Place Order for Customer
-                    </a>
-                    <a href="{{ url_for('staff.current_orders') }}" class="btn btn-lg btn-outline-success">
-                        <i class="bi bi-list-check"></i> View Current Orders
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+    .dashboard-header {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .dashboard-section {
+        margin-bottom: 30px;
+    }
+
+        .sales-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .sales-card .icon {
+        font-size: 2rem;
+    }
+
+    .progress-bar-container {
+        background: #e9f5eb; /* Light green background */
+        border-radius: 10px;
+        height: 6px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: #28a745; /* Main green color */
+    }
+
+    .btn:hover {
+        transform: scale(1.05);
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="dashboard-header text-center">Staff Dashboard</div>
 
     <!-- Total Sales Section -->
-    <div class="row">
-        <div class="col-md-4 mb-3">
-            <div class="card text-center shadow-sm border-success">
-                <div class="card-header bg-success text-white">
-                    <h4>Total Sales</h4>
-                </div>
-                <div class="card-body">
-                    <p><strong>Weekly:</strong> ${{ "%.2f"|format(weekly_sales) }}</p>
-                    <p><strong>Monthly:</strong> ${{ "%.2f"|format(monthly_sales) }}</p>
-                    <p><strong>Yearly:</strong> ${{ "%.2f"|format(yearly_sales) }}</p>
+    <div class="row mb-4">
+    <div class="col-md-4">
+        <div class="sales-card">
+            <div>
+                <h3>${{ "%.2f"|format(weekly_sales) }}</h3>
+                <p>Weekly Sales</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 60%;"></div>
                 </div>
             </div>
-        </div>
-
-        <!-- Current Orders Link -->
-        <div class="col-md-4 mb-3">
-            <div class="card text-center shadow-sm border-success">
-                <div class="card-header bg-success text-white">
-                    <h4>Current Orders</h4>
-                </div>
-                <div class="card-body">
-                    <p>Manage current orders.</p>
-                    <a href="{{ url_for('staff.current_orders') }}" class="btn btn-outline-success">View Current Orders</a>
-                </div>
+            <div class="icon">
+                <i class="bi bi-calendar-week" style="color: #28a745;"></i>
             </div>
         </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sales-card">
+            <div>
+                <h3>${{ "%.2f"|format(monthly_sales) }}</h3>
+                <p>Monthly Sales</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 80%;"></div>
+                </div>
+            </div>
+            <div class="icon">
+                <i class="bi bi-calendar-month" style="color: #28a745;"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="sales-card">
+            <div>
+                <h3>${{ "%.2f"|format(yearly_sales) }}</h3>
+                <p>Yearly Sales</p>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" style="width: 90%;"></div>
+                </div>
+            </div>
+            <div class="icon">
+                <i class="bi bi-calendar3" style="color: #28a745;"></i>
+            </div>
+        </div>
+    </div>
+</div>
 
-        <!-- Previous Orders Link -->
-        <div class="col-md-4 mb-3">
-            <div class="card text-center shadow-sm border-success">
-                <div class="card-header bg-success text-white">
-                    <h4>Previous Orders</h4>
-                </div>
-                <div class="card-body">
-                    <p>Check previous orders.</p>
-                    <a href="{{ url_for('staff.previous_orders') }}" class="btn btn-outline-success">View Previous Orders</a>
-                </div>
+    <!-- Quick Actions Section -->
+    <div class="dashboard-section">
+        <div class="card">
+            <div class="card-header">Quick Actions</div>
+            <div class="card-body d-flex justify-content-between">
+                <a href="{{ url_for('staff.place_customer_order') }}" class="btn btn-outline-success">
+                    🛒 Place Order for Customer
+                </a>
+                <a href="{{ url_for('staff.current_orders') }}" class="btn btn-outline-primary">
+                    📦 View Current Orders
+                </a>
             </div>
         </div>
     </div>
 
-    <!-- Additional Links -->
-    <div class="row">
-        <!-- Available Vegetables and Premade Boxes Link -->
-        <div class="col-md-6 mb-3">
-            <div class="card text-center shadow-sm border-success">
-                <div class="card-header bg-success text-white">
-                    <h4>Available Items</h4>
-                </div>
-                <div class="card-body">
-                    <p>See all available vegetables and premade boxes.</p>
-                    <a href="{{ url_for('staff.available_items') }}" class="btn btn-outline-success">View Available Items</a>
+    <!-- Available Items Section -->
+    <div class="dashboard-section">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Available Items</div>
+                    <div class="card-body">
+                        <p>See all available vegetables and premade boxes.</p>
+                        <a href="{{ url_for('staff.available_items') }}" class="btn btn-outline-success">
+                            View Available Items
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Customer List Link -->
-        <div class="col-md-6 mb-3">
-            <div class="card text-center shadow-sm border-success">
-                <div class="card-header bg-success text-white">
-                    <h4>Customer List</h4>
-                </div>
-                <div class="card-body">
-                    <p>Access the full customer list.</p>
-                    <a href="{{ url_for('staff.customer_list') }}" class="btn btn-outline-success">View Customer List</a>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">Customer List</div>
+                    <div class="card-body">
+                        <p>Access the full customer list.</p>
+                        <a href="{{ url_for('staff.customer_list') }}" class="btn btn-outline-success">
+                            View Customer List
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Most Popular Items Section -->
-    <div class="card mt-4 shadow-sm border-success">
-        <div class="card-header bg-success text-white">
-            <h4>Most Popular Items</h4>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Item Name</th>
-                            <th>Orders Count</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in popular_items %}
-                        <tr>
-                            <td>{{ item.name }}</td>
-                            <td>{{ item.count }} orders</td>
-                            <td>
-                                <a href="{{ url_for('staff.place_customer_order', item_id=item.id) }}"
-                                   class="btn btn-sm btn-success">
-                                    <i class="bi bi-cart-plus"></i> Quick Order
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+    <div class="dashboard-section">
+        <div class="card">
+            <div class="card-header">Most Popular Items</div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    {% for item in popular_items %}
+                    <li class="list-group-item d-flex align-items-center">
+                        <i class="bi bi-star-fill text-warning me-3" style="font-size: 1.5rem;"></i>
+                        <div class="flex-grow-1">
+                            <strong>{{ item.name }}</strong>
+                            <p class="mb-0 text-muted">{{ item.count }} orders</p>
+                        </div>
+                        <a href="{{ url_for('staff.place_customer_order', item_id=item.id) }}" class="btn btn-sm btn-outline-success">
+                            🛒 Quick Order
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
             </div>
         </div>
     </div>
@@ -131,15 +172,15 @@
 
 {% block scripts %}
 <script>
-    // Add hover effect to cards
-    document.querySelectorAll('.card').forEach(card => {
+    // Add hover effect to sales cards
+    document.querySelectorAll('.sales-card').forEach(card => {
         card.addEventListener('mouseenter', function() {
-            this.style.transform = 'translateY(-5px)';
-            this.style.transition = 'transform 0.3s ease';
+            this.style.transform = 'scale(1.02)';
+            this.style.transition = 'transform 0.2s ease';
         });
 
         card.addEventListener('mouseleave', function() {
-            this.style.transform = 'translateY(0)';
+            this.style.transform = 'scale(1)';
         });
     });
 </script>

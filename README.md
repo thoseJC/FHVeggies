@@ -16,6 +16,8 @@ This project is implemented in Python using the Flask framework and SQLAlchemy f
 
 ![img.png](img.png)
 
+![img_4.png](img_4.png)
+
 ## Optipn 1- Simply Browsing: 
 
 **CLICK THE 'Home' ICON ON THE RIGHT TOP CORNER**
@@ -41,6 +43,8 @@ This project is implemented in Python using the Flask framework and SQLAlchemy f
 ## Features
 
 ### Customer Features
+
+![img_3.png](img_3.png)
 1. **User Authentication**: Customers can log in and out securely.
 2. **Browse Products**:
    - Individual vegetables (by unit, weight, pack, etc.).
@@ -57,6 +61,8 @@ This project is implemented in Python using the Flask framework and SQLAlchemy f
    - Corporate customers benefit from a 10% discount.
 
 ### Staff Features
+
+![img_2.png](img_2.png)
 1. **Order Fulfillment**:
    - View and process current and past orders.
    - Update order statuses.
