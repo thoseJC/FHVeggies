@@ -1,17 +1,27 @@
+# Fresh Harvest Veggies - Online Order Management System
+
+## Overview
+
+Fresh Harvest Veggies is an online order management system designed for a farm-fresh vegetable business. The system caters to private and corporate customers, providing an efficient way to place orders for vegetables and premade boxes, manage customer accounts, and generate detailed sales and customer reports.
+
+This project is implemented in Python using the Flask framework and SQLAlchemy for database interactions. It includes user authentication, order placement, and reporting functionalities, ensuring an intuitive and robust user experience.
+
+---
+
 # The fastest way to checkout this project:
 
-**Website address:**
+## Website address:
 
 [**https://jennyjc.pythonanywhere.com/**](https://jennyjc.pythonanywhere.com/)  
 
 ![img.png](img.png)
 
-# Optipn 1- Simply Browsing: 
+## Optipn 1- Simply Browsing: 
 
 **CLICK THE 'Home' ICON ON THE RIGHT TOP CORNER**
 
-# Option 2-Explore more functions:
-**Login in as different roles!**
+## Option 2-Explore more functions:
+### Login in as different roles!
 
 **CUSTOMER:**
 
@@ -25,16 +35,6 @@
 
 **Password: admin123** 
 
-
----
-
-# Fresh Harvest Veggies - Online Order Management System
-
-## Overview
-
-Fresh Harvest Veggies is an online order management system designed for a farm-fresh vegetable business. The system caters to private and corporate customers, providing an efficient way to place orders for vegetables and premade boxes, manage customer accounts, and generate detailed sales and customer reports.
-
-This project is implemented in Python using the Flask framework and SQLAlchemy for database interactions. It includes user authentication, order placement, and reporting functionalities, ensuring an intuitive and robust user experience.
 
 ---
 
