@@ -29,7 +29,7 @@ This project is implemented in Python using the Flask framework and SQLAlchemy f
 
 **Password: customer123** 
 
-**SATFF:**
+**STAFF:**
 
 **username: test_admin**
 
