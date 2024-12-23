@@ -5,14 +5,13 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'you-will-never-guess'  # Set a strong secret key for security
 
     # SQLAlchemy database configuration for MySQL
-    DB_USERNAME = os.environ.get('DB_USERNAME') or 'root'
-    DB_PASSWORD = os.environ.get('DB_PASSWORD') or ''
-    DB_HOST = os.environ.get('DB_HOST') or 'localhost'
-    DB_PORT = os.environ.get('DB_PORT') or '3306'
-    DB_NAME = os.environ.get('DB_NAME') or 'fhv'
+    DB_USERNAME = os.environ.get('DB_USERNAME') or 'JennyJC'
+    DB_PASSWORD = os.environ.get('DB_PASSWORD') or 'chen12300.'
+    DB_HOST = os.environ.get('DB_HOST') or 'JennyJC.mysql.pythonanywhere-services.com'
+    DB_NAME = os.environ.get('DB_NAME') or 'JennyJC$FHVeggies'
 
     # Construct the database URI for SQLAlchemy
-    SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}'
+    SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{DB_USERNAME}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}'
     SQLALCHEMY_TRACK_MODIFICATIONS = False  # Disable track modifications to improve performance
 
     # Additional configuration options for Flask extensions
