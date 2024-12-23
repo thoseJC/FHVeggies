@@ -1,43 +1,53 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h2 class="text-center">Login</h2>
+<div
+    class="background"
+    style="background-image: url('{{ url_for('static', filename='images/bgPic-login.jpg') }}');
+    margin-top: -5%;
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    height: 85vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;"
+>
+    <div class="card" style="max-width: 600px;
+    width: 90%;
+    background-color: rgba(255, 255, 255, 0.8);">
+        <div class="card-header">
+            <h2 class="text-center">Login</h2>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('auth.login') }}">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    {{ form.username.label }}
+                    {{ form.username(class="form-control") }}
+                    {% for error in form.username.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                    {% endfor %}
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="{{ url_for('auth.login') }}">
-                        {{ form.hidden_tag() }}
-                        <div class="form-group">
-                            {{ form.username.label }}
-                            {{ form.username(class="form-control") }}
-                            {% for error in form.username.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                        <div class="form-group mt-3">
-                            {{ form.password.label }}
-                            {{ form.password(class="form-control") }}
-                            {% for error in form.password.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                        <div class="form-group mt-3">
-                            {{ form.user_type.label }}
-                            {{ form.user_type(class="form-control") }}
-                            {% for error in form.user_type.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                        <div class="text-center mt-4">
-                            {{ form.submit(class="btn btn-outline-success") }}
-                        </div>
-                    </form>
+                <div class="form-group mt-3">
+                    {{ form.password.label }}
+                    {{ form.password(class="form-control") }}
+                    {% for error in form.password.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                    {% endfor %}
                 </div>
-            </div>
+                <div class="form-group mt-3">
+                    {{ form.user_type.label }}
+                    {{ form.user_type(class="form-control") }}
+                    {% for error in form.user_type.errors %}
+                    <span class="text-danger">{{ error }}</span>
+                    {% endfor %}
+                </div>
+                <div class="text-center mt-4">
+                    {{ form.submit(class="btn btn-outline-success") }}
+                </div>
+            </form>
         </div>
     </div>
 </div>
